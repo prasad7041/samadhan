@@ -1,0 +1,42 @@
+import { Router } from 'express';
+import {
+  createComplaint,
+  getComplaints,
+  getMyReports,
+  getAssignedComplaints,
+  getNearbyComplaints,
+  getComplaintById,
+  updateStatus,
+  assignAuthority,
+} from '../controllers/complaint.controller.js';
+import { authenticate, authorize } from '../middleware/auth.js';
+import { validate } from '../middleware/validate.js';
+import { uploadComplaint } from '../middleware/upload.js';
+import { validateCreateComplaint, validateStatusUpdate, validateAssignment } from '../validators/complaint.validator.js';
+
+const router = Router();
+
+// All complaint routes require authentication
+router.use(authenticate);
+
+// Citizen routes
+router.post('/', authorize('citizen'), uploadComplaint.single('image'), validate(validateCreateComplaint), createComplaint);
+router.get('/my-reports', authorize('citizen'), getMyReports);
+
+// Authority routes
+router.get('/assigned', authorize('authority'), getAssignedComplaints);
+
+// Shared routes (citizen can see nearby, authority/admin can see all)
+router.get('/nearby', authorize('citizen', 'authority', 'admin'), getNearbyComplaints);
+router.get('/', authorize('authority', 'admin'), getComplaints);
+
+// Single complaint (any authenticated user)
+router.get('/:id', getComplaintById);
+
+// Status update (authority/admin)
+router.put('/:id/status', authorize('authority', 'admin'), validate(validateStatusUpdate), updateStatus);
+
+// Assignment (admin only)
+router.put('/:id/assign', authorize('admin'), validate(validateAssignment), assignAuthority);
+
+export default router;

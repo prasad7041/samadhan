@@ -1,0 +1,300 @@
+{
+  "info": {
+    "name": "Samadhan Backend API",
+    "description": "Complete API collection for the Samadhan Citizen-Government Complaint Management System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "BASE_URL", "value": "http://localhost:5000" },
+    { "key": "CITIZEN_TOKEN", "value": "" },
+    { "key": "AUTHORITY_TOKEN", "value": "" },
+    { "key": "ADMIN_TOKEN", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "GET /api/health",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Citizen Auth",
+      "item": [
+        {
+          "name": "POST Citizen Signup",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_URL}}/api/auth/citizen/signup",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Rahul Kumar\",\n  \"mobile\": \"9876543210\",\n  \"area\": \"Madhapur\",\n  \"pincode\": \"500081\",\n  \"preferred_language\": \"English\"\n}"
+            }
+          }
+        },
+        {
+          "name": "POST Verify Signup OTP",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_URL}}/api/auth/citizen/verify-signup",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mobile\": \"9876543210\",\n  \"otp\": \"CHECK_SERVER_CONSOLE\",\n  \"full_name\": \"Rahul Kumar\",\n  \"area\": \"Madhapur\",\n  \"pincode\": \"500081\",\n  \"preferred_language\": \"English\"\n}"
+            }
+          }
+        },
+        {
+          "name": "POST Send Login OTP",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_URL}}/api/auth/citizen/send-otp",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mobile\": \"9876543210\"\n}"
+            }
+          }
+        },
+        {
+          "name": "POST Verify Login OTP",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_URL}}/api/auth/citizen/verify-otp",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mobile\": \"9876543210\",\n  \"otp\": \"CHECK_SERVER_CONSOLE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "GET Citizen Profile",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/auth/citizen/profile",
+            "header": [{ "key": "Authorization", "value": "Bearer {{CITIZEN_TOKEN}}" }]
+          }
+        },
+        {
+          "name": "PUT Update Citizen Profile",
+          "request": {
+            "method": "PUT",
+            "url": "{{BASE_URL}}/api/auth/citizen/profile",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{CITIZEN_TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Rahul Kumar Updated\",\n  \"area\": \"Hitech City\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authority Auth",
+      "item": [
+        {
+          "name": "POST Authority Signup",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_URL}}/api/auth/authority/signup",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"officer@gov.in\",\n  \"password\": \"Officer@123\",\n  \"job_role\": \"Water Inspector\",\n  \"sector\": \"Water Supply\",\n  \"area\": \"Madhapur\",\n  \"pincode\": \"500081\",\n  \"mobile\": \"9988776655\"\n}"
+            }
+          }
+        },
+        {
+          "name": "POST Authority Login",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_URL}}/api/auth/authority/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"officer@gov.in\",\n  \"password\": \"Officer@123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "GET Authority Profile",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/auth/authority/profile",
+            "header": [{ "key": "Authorization", "value": "Bearer {{AUTHORITY_TOKEN}}" }]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Auth",
+      "item": [
+        {
+          "name": "POST Admin Login",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_URL}}/api/auth/admin/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"admin_id\": \"admin_master\",\n  \"password\": \"Admin@123\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Complaints",
+      "item": [
+        {
+          "name": "POST Create Complaint",
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_URL}}/api/complaints",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{CITIZEN_TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Major water pipe leakage near the public playground. Water accumulation is making the area unsafe.\",\n  \"location\": \"Central Market, Sector 4\",\n  \"latitude\": \"17.44506\",\n  \"longitude\": \"78.38018\",\n  \"priority\": \"High\"\n}"
+            }
+          }
+        },
+        {
+          "name": "GET My Reports (Citizen)",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/complaints/my-reports",
+            "header": [{ "key": "Authorization", "value": "Bearer {{CITIZEN_TOKEN}}" }]
+          }
+        },
+        {
+          "name": "GET All Complaints (Authority/Admin)",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/complaints?status=Pending&page=1&limit=10",
+            "header": [{ "key": "Authorization", "value": "Bearer {{AUTHORITY_TOKEN}}" }]
+          }
+        },
+        {
+          "name": "GET Assigned Complaints (Authority)",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/complaints/assigned",
+            "header": [{ "key": "Authorization", "value": "Bearer {{AUTHORITY_TOKEN}}" }]
+          }
+        },
+        {
+          "name": "GET Nearby Complaints",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/complaints/nearby?latitude=17.44506&longitude=78.38018&radius=5",
+            "header": [{ "key": "Authorization", "value": "Bearer {{CITIZEN_TOKEN}}" }]
+          }
+        },
+        {
+          "name": "GET Complaint By ID",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/complaints/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{CITIZEN_TOKEN}}" }]
+          }
+        },
+        {
+          "name": "PUT Update Complaint Status",
+          "request": {
+            "method": "PUT",
+            "url": "{{BASE_URL}}/api/complaints/1/status",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{AUTHORITY_TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"In Progress\",\n  \"remarks\": \"Maintenance team dispatched\"\n}"
+            }
+          }
+        },
+        {
+          "name": "PUT Assign Authority to Complaint",
+          "request": {
+            "method": "PUT",
+            "url": "{{BASE_URL}}/api/complaints/1/assign",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"authority_id\": 1\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Management",
+      "item": [
+        {
+          "name": "GET Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/admin/dashboard/stats",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" }]
+          }
+        },
+        {
+          "name": "GET All Citizens",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/admin/users/citizens?page=1&limit=20",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" }]
+          }
+        },
+        {
+          "name": "GET All Authorities",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/admin/users/authorities?page=1&limit=20",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" }]
+          }
+        },
+        {
+          "name": "DELETE User",
+          "request": {
+            "method": "DELETE",
+            "url": "{{BASE_URL}}/api/admin/users/citizen/1",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" }]
+          }
+        },
+        {
+          "name": "GET Audit Logs",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/admin/audit-logs?page=1&limit=50",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" }]
+          }
+        },
+        {
+          "name": "GET Departments",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/admin/departments",
+            "header": [{ "key": "Authorization", "value": "Bearer {{ADMIN_TOKEN}}" }]
+          }
+        }
+      ]
+    }
+  ]
+}

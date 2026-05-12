@@ -1,0 +1,7 @@
+node_modules/
+.env
+database/*.db
+uploads/profiles/*
+uploads/complaints/*
+!uploads/profiles/.gitkeep
+!uploads/complaints/.gitkeep

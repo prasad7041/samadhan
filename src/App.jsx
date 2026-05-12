@@ -49,9 +49,9 @@ function App() {
                 </ProtectedRoute>
               } />
               <Route path="/citizen/raise" element={
-                <ProtectedRoute allowedRoles={['citizen']}>
-                  <RaiseComplaint />
-                </ProtectedRoute>
+                // <ProtectedRoute allowedRoles={['citizen']}>
+                <RaiseComplaint />
+                // </ProtectedRoute>
               } />
               <Route path="/citizen/profile" element={
                 <ProtectedRoute allowedRoles={['citizen']}>

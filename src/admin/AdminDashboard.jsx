@@ -1,4 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { getDashboardStats } from "../api/adminService";
+import { getAllComplaints } from "../api/complaintService";
 
 import {
   Dashboard,
@@ -65,6 +67,22 @@ const chartHeights = [
 /* ================= MAIN ================= */
 
 export default function AdminDashboard() {
+  const [stats, setStats] = useState({ totalCitizens: 0, totalAuthorities: 0, totalComplaints: 0, resolvedComplaints: 0 });
+  const [escalations, setEscalations] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [statsRes, complaintsRes] = await Promise.all([getDashboardStats(), getAllComplaints({ status: 'pending', page: 1, limit: 5 })]);
+        if (statsRes.data) setStats(statsRes.data);
+        const complaints = complaintsRes.data?.complaints || [];
+        setEscalations(complaints.map(c => ({ id: `#SM-${c.id}`, issue: c.description?.slice(0, 25) + "...", location: c.location || "Unknown", status: new Date(c.created_at).toLocaleDateString() })));
+      } catch (err) { console.error(err); }
+      finally { setLoading(false); }
+    };
+    fetchData();
+  }, []);
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex text-gray-900 overflow-hidden relative">
       {/* Background Effects */}

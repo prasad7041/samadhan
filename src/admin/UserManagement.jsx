@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { getAllCitizens, getAllAuthorities, deleteUser } from "../api/adminService";
 
 import {
   Bell,
@@ -23,64 +24,46 @@ import {
   useLocation,
 } from "react-router-dom";
 
-/* ================= DATA ================= */
-
-const users = [
-  {
-    initials: "AK",
-    name: "Arjun Kapoor",
-    email: "arjun.k@citizen.in",
-    sector: "Urban Planning",
-    role: "Lead Contributor",
-    status: "Active",
-    score: "98%",
-  },
-
-  {
-    initials: "SD",
-    name: "Sneha Deshmukh",
-    email: "sneha.d@gmail.com",
-    sector: "Sanitation",
-    role: "Citizen Observer",
-    status: "Pending",
-    score: "76%",
-  },
-
-  {
-    initials: "RM",
-    name: "Rahul Mehta",
-    email: "rahul.m@outlook.com",
-    sector: "Water Supply",
-    role: "Verified Reporter",
-    status: "Suspended",
-    score: "43%",
-  },
-
-  {
-    initials: "PS",
-    name: "Priya Sharma",
-    email: "priya.s@corp.in",
-    sector: "Public Health",
-    role: "Admin Moderator",
-    status: "Active",
-    score: "91%",
-  },
-];
-
-const statusStyles = {
-  Active:
-    "bg-green-100 text-green-700 border-green-200",
-
-  Pending:
-    "bg-yellow-100 text-yellow-700 border-yellow-200",
-
-  Suspended:
-    "bg-red-100 text-red-700 border-red-200",
-};
-
 /* ================= MAIN ================= */
 
 export default function UserManagement() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("citizens");
+
+  const fetchUsers = async (tab) => {
+    setLoading(true);
+    try {
+      const res = tab === "citizens" ? await getAllCitizens(1, 50) : await getAllAuthorities(1, 50);
+      const list = res.data?.citizens || res.data?.authorities || [];
+      setUsers(list.map(u => ({
+        initials: (u.full_name || u.email || "?").slice(0, 2).toUpperCase(),
+        name: u.full_name || u.email?.split("@")[0] || "User",
+        email: u.email || u.mobile || "N/A",
+        sector: u.sector || u.area || "N/A",
+        role: tab === "citizens" ? "Citizen" : u.job_role || "Authority",
+        status: "Active",
+        score: "—",
+        id: u.id,
+        userRole: tab === "citizens" ? "citizen" : "authority",
+      })));
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchUsers(activeTab); }, [activeTab]);
+
+  const handleDelete = async (role, id) => {
+    if (!window.confirm("Are you sure you want to delete this user?")) return;
+    try { await deleteUser(role, id); fetchUsers(activeTab); } catch (err) { console.error(err); }
+  };
+
+  const statusStyles = {
+    Active: "bg-green-100 text-green-700 border-green-200",
+    Pending: "bg-yellow-100 text-yellow-700 border-yellow-200",
+    Suspended: "bg-red-100 text-red-700 border-red-200",
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex text-gray-900 overflow-hidden relative">
       {/* Background Effects */}

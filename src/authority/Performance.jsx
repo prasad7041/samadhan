@@ -1,4 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { getAssignedComplaints } from "../api/complaintService";
+import { useAuth } from "../context/AuthContext";
 
 import {
   EmojiEvents,
@@ -81,6 +83,21 @@ const officers = [
 /* ================= MAIN ================= */
 
 export default function AuthorityPerformance() {
+  const { user } = useAuth();
+  const [stats, setStats] = useState({ resolved: 0, total: 0, pending: 0 });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await getAssignedComplaints(1, 100);
+        const complaints = res.data?.complaints || [];
+        setStats({ total: complaints.length, resolved: complaints.filter(c => c.status === 'resolved').length, pending: complaints.filter(c => c.status === 'pending').length });
+      } catch (err) { console.error(err); }
+      finally { setLoading(false); }
+    };
+    fetchData();
+  }, []);
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 text-gray-900 pb-32 overflow-hidden relative">
       {/* Background Effects */}

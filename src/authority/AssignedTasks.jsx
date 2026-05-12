@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { getAssignedComplaints, updateComplaintStatus } from "../api/complaintService";
 
 import {
   Menu,
@@ -76,16 +77,41 @@ const initialTasks = [
 /* ================= MAIN ================= */
 
 export default function AuthorityTasks() {
-  const [tasks, setTasks] =  useState(initialTasks);
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const res = await getAssignedComplaints(1, 20);
+        const complaints = res.data?.complaints || [];
+        setTasks(complaints.map(c => ({
+          id: c.id,
+          title: c.description?.slice(0, 40) + "...",
+          department: c.sector || "General",
+          location: c.location || "Unknown",
+          reported: new Date(c.created_at).toLocaleDateString(),
+          status: c.status === "resolved" ? "Resolved" : c.status === "in_progress" ? "In Progress" : "Pending",
+          priority: c.priority === "high" || c.priority === "critical" ? "High" : c.priority === "medium" ? "Medium" : "Low",
+          likes: 0, comments: 0,
+          image: c.image_path || null,
+          description: c.description,
+        })));
+      } catch (err) { console.error(err); }
+      finally { setLoading(false); }
+    };
+    fetchTasks();
+  }, []);
 
   const handleLike = (id) => {
-    setTasks((prev) =>
-      prev.map((task) =>
-        task.id === id
-          ? { ...task, likes: task.likes + 1 }
-          : task
-      )
-    );
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, likes: t.likes + 1 } : t));
+  };
+
+  const handleStatusUpdate = async (id, newStatus) => {
+    try {
+      await updateComplaintStatus(id, newStatus, `Status updated to ${newStatus}`);
+      setTasks(prev => prev.map(t => t.id === id ? { ...t, status: newStatus === "resolved" ? "Resolved" : newStatus === "in_progress" ? "In Progress" : "Pending" } : t));
+    } catch (err) { console.error(err); }
   };
 
   return (

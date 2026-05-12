@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { getDepartments } from "../api/adminService";
 
 import {
   Bell,
@@ -102,6 +103,36 @@ const departments = [
 /* ================= MAIN ================= */
 
 export default function DepartmentOversight() {
+  const [departments, setDepartments] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const iconMap = { Droplets, Zap, Trash2, Bus, HeartPulse };
+  const defaultIcons = [Droplets, Zap, Trash2, Bus, HeartPulse];
+
+  useEffect(() => {
+    const fetchDepts = async () => {
+      try {
+        const res = await getDepartments();
+        const depts = res.data?.departments || res.data || [];
+        if (Array.isArray(depts) && depts.length > 0) {
+          setDepartments(depts.map((d, i) => ({
+            name: d.name || d.sector || "Department",
+            zone: d.zone || "General",
+            priority: d.priority || "Standard",
+            priorityStyle: "bg-blue-100 text-blue-700",
+            open: d.open || 0,
+            resolved: d.resolved || 0,
+            load: d.load || 50,
+            avg: d.avg || "N/A",
+            icon: React.createElement(defaultIcons[i % defaultIcons.length], { size: 24 }),
+            color: ["from-blue-600 to-cyan-500", "from-red-500 to-orange-400", "from-slate-600 to-slate-400", "from-gray-700 to-gray-500", "from-pink-500 to-rose-400"][i % 5],
+          })));
+        }
+      } catch (err) { console.error(err); }
+      finally { setLoading(false); }
+    };
+    fetchDepts();
+  }, []);
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex overflow-hidden relative">
       {/* Background Effects */}

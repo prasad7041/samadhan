@@ -1,4 +1,7 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { getAuthorityProfile } from "../api/authService";
+import { getAssignedComplaints } from "../api/complaintService";
+import { useAuth } from "../context/AuthContext";
 
 import {
   Verified,
@@ -26,20 +29,39 @@ import {
 /* ================= MAIN ================= */
 
 export default function AuthorityProfile() {
+  const { user } = useAuth();
+  const [profile, setProfile] = useState(null);
+  const [resolved, setResolved] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [profRes, tasksRes] = await Promise.all([getAuthorityProfile(), getAssignedComplaints(1, 100)]);
+        setProfile(profRes.data?.user);
+        const complaints = tasksRes.data?.complaints || [];
+        setResolved(complaints.filter(c => c.status === "resolved").length);
+      } catch (err) { console.error(err); }
+      finally { setLoading(false); }
+    };
+    fetchData();
+  }, []);
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" /></div>;
+
   const officer = {
-    name: "Rahul Sharma",
-    role: "Senior Civic Officer",
-    department: "Roads & Infrastructure",
-    email: "rahul.sharma@gov.in",
-    phone: "+91 9876543210",
-    location: "Hyderabad, Telangana",
-    joined: "March 2021",
-    resolved: 124,
+    name: profile?.email?.split("@")[0] || user?.email?.split("@")[0] || "Officer",
+    role: profile?.job_role || "Civic Officer",
+    department: profile?.sector || "General",
+    email: profile?.email || "N/A",
+    phone: profile?.mobile || "N/A",
+    location: `${profile?.area || "N/A"}, ${profile?.pincode || ""}`,
+    joined: new Date(profile?.created_at || Date.now()).toLocaleDateString("en-IN", { month: "long", year: "numeric" }),
+    resolved,
     rating: 4.8,
     efficiency: "91%",
-    tag: "Top Performer",
-    avatar:
-      "https://randomuser.me/api/portraits/men/32.jpg",
+    tag: "Active Officer",
+    avatar: profile?.profile_picture || "https://randomuser.me/api/portraits/men/32.jpg",
   };
 
   return (

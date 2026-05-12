@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { getAuditLogs } from "../api/adminService";
 
 import {
   Search,
@@ -90,6 +91,28 @@ const logs = [
 /* ================= MAIN ================= */
 
 export default function AuditLogs() {
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchLogs = async () => {
+      try {
+        const res = await getAuditLogs(1, 50);
+        const entries = res.data?.logs || res.data || [];
+        setLogs(Array.isArray(entries) ? entries.map(l => ({
+          time: new Date(l.changed_at || l.created_at || Date.now()).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+          date: new Date(l.changed_at || l.created_at || Date.now()).toLocaleDateString("en-IN", { month: "short", day: "numeric" }),
+          user: l.changed_by_name || l.user || "System",
+          role: l.changed_by_role || l.role || "Audit",
+          action: `Complaint #${l.complaint_id || "?"}: ${l.old_status || "?"} → ${l.new_status || "?"} ${l.remarks ? `(${l.remarks})` : ""}`,
+          button: "View",
+          icon: <History size={18} />,
+        })) : []);
+      } catch (err) { console.error(err); }
+      finally { setLoading(false); }
+    };
+    fetchLogs();
+  }, []);
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex overflow-hidden relative">
       {/* Background Effects */}

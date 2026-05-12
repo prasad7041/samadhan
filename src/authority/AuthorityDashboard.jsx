@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { getAssignedComplaints } from "../api/complaintService";
 
 import {
   Menu,
@@ -26,62 +27,35 @@ import {
 
 /* ================= DATA ================= */
 
-const issues = [
-  {
-    id: "#SMD-2024-9981",
-    title: "Major Water Pipe Leakage",
-    description:
-      "Main line burst reported near Central Market area causing flooding on the street and affecting water supply to Sector 4 residents.",
-    priority: "High",
-    color: "from-red-500 to-red-400",
-    badge: "bg-red-100 text-red-700",
-    time: "02h 14m",
-    location: "Central Market, Sector 4",
-    reported: "Reported 2h ago",
-    likes: 124,
-    comments: 32,
-    image:
-      "https://images.unsplash.com/photo-1581092921461-eab62e97a780?q=80&w=1200&auto=format&fit=crop",
-  },
-
-  {
-    id: "#SMD-2024-9985",
-    title: "Street Light Maintenance",
-    description:
-      "Three consecutive street lights are non-functional on West Avenue creating safety concerns during nighttime.",
-    priority: "Medium",
-    color: "from-blue-500 to-cyan-400",
-    badge: "bg-blue-100 text-blue-700",
-    time: "18h 45m",
-    location: "West Avenue, Lane 12",
-    reported: "Reported 6h ago",
-    likes: 89,
-    comments: 18,
-    image:
-      "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=1200&auto=format&fit=crop",
-  },
-
-  {
-    id: "#SMD-2024-9990",
-    title: "Pothole Repair Request",
-    description:
-      "Minor pothole developing on the shoulder of the road creating inconvenience for commuters.",
-    priority: "Low",
-    color: "from-gray-500 to-gray-400",
-    badge: "bg-gray-100 text-gray-700",
-    time: "3d 12h",
-    location: "Lakeview Road, Junction 4",
-    reported: "Reported yesterday",
-    likes: 54,
-    comments: 10,
-    image:
-      "https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=1200&auto=format&fit=crop",
-  },
-];
-
 /* ================= MAIN ================= */
 
 export default function AuthorityDashboard() {
+  const [issues, setIssues] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await getAssignedComplaints(1, 20);
+        const complaints = res.data?.complaints || [];
+        setIssues(complaints.map(c => ({
+          id: `#SMD-${c.id}`,
+          title: c.description?.slice(0, 40) + "...",
+          description: c.description,
+          priority: c.priority === "high" ? "High" : c.priority === "critical" ? "High" : c.priority === "medium" ? "Medium" : "Low",
+          color: c.priority === "high" || c.priority === "critical" ? "from-red-500 to-red-400" : c.priority === "medium" ? "from-blue-500 to-cyan-400" : "from-gray-500 to-gray-400",
+          badge: c.priority === "high" || c.priority === "critical" ? "bg-red-100 text-red-700" : c.priority === "medium" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700",
+          time: new Date(c.created_at).toLocaleDateString(),
+          location: c.location || "Unknown",
+          reported: `Reported ${new Date(c.created_at).toLocaleDateString()}`,
+          likes: 0, comments: 0,
+          image: c.image_path || null,
+        })));
+      } catch (err) { console.error(err); }
+      finally { setLoading(false); }
+    };
+    fetchData();
+  }, []);
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 text-gray-900 pb-32 overflow-hidden relative">
       {/* Background Blur */}
@@ -178,6 +152,8 @@ export default function AuthorityDashboard() {
         </section>
 
         {/* Feed */}
+        {loading && <div className="flex items-center justify-center py-20"><div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" /></div>}
+        {!loading && issues.length === 0 && <div className="text-center py-20 text-gray-500 text-lg">No complaints assigned yet.</div>}
         <div className="space-y-10">
           {issues.map((issue) => (
             <IssueCard

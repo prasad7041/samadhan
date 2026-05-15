@@ -14,7 +14,7 @@ import env from '../config/env.js';
  */
 export async function signup(req, res, next) {
   try {
-    const { email, password, job_role, sector, area, pincode, mobile } = req.body;
+    const { email, password, job_role, sector, area, pincode, mobile, village, mandal, district, latitude, longitude } = req.body;
 
     // Check if authority already exists
     const existing = AuthorityModel.findByEmail(email);
@@ -38,6 +38,11 @@ export async function signup(req, res, next) {
       pincode,
       mobile,
       profile_picture,
+      village,
+      mandal,
+      district,
+      latitude,
+      longitude,
     });
 
     // Generate JWT
@@ -86,6 +91,13 @@ export async function login(req, res, next) {
         pincode: authority.pincode,
         mobile: authority.mobile,
         profile_picture: authority.profile_picture,
+        village: authority.village,
+        mandal: authority.mandal,
+        district: authority.district,
+        latitude: authority.latitude,
+        longitude: authority.longitude,
+        active_status: authority.active_status,
+        workload_count: authority.workload_count,
       },
     }, 'Login successful.');
   } catch (err) {

@@ -182,8 +182,13 @@ export default function MyReports() {
                           <FileText size={24} />
                         </div>
                         <div>
-                          <h2 className="text-3xl font-black text-gray-800">{report.description?.slice(0, 40)}...</h2>
-                          <p className="text-gray-500 mt-1">Issue ID: #SM-{report.id}</p>
+                          <div className="flex flex-wrap items-center gap-3">
+                            <h2 className="text-3xl font-black text-gray-800">{report.title || "General Complaint"}</h2>
+                            <span className="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold uppercase tracking-wider">
+                              {report.sector || "General"}
+                            </span>
+                          </div>
+                          <p className="text-gray-500 mt-1">{report.description?.slice(0, 60)}... | ID: #SM-{report.id}</p>
                         </div>
                       </div>
                     </div>

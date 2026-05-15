@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getAssignedComplaints } from "../api/complaintService";
+import { getSectorComplaints } from "../api/complaintService";
 
 import {
   Menu,
@@ -36,11 +36,12 @@ export default function AuthorityDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await getAssignedComplaints(1, 20);
-        const complaints = res.data?.complaints || [];
+        const res = await getSectorComplaints(1, 50);
+        const list = res?.data?.complaints || res?.complaints || res?.data || [];
+        const complaints = Array.isArray(list) ? list : (Array.isArray(res?.data?.data?.complaints) ? res.data.data.complaints : []);
         setIssues(complaints.map(c => ({
           id: `#SMD-${c.id}`,
-          title: c.description?.slice(0, 40) + "...",
+          title: c.title || c.description?.slice(0, 40) + "...",
           description: c.description,
           priority: c.priority === "high" ? "High" : c.priority === "critical" ? "High" : c.priority === "medium" ? "Medium" : "Low",
           color: c.priority === "high" || c.priority === "critical" ? "from-red-500 to-red-400" : c.priority === "medium" ? "from-blue-500 to-cyan-400" : "from-gray-500 to-gray-400",

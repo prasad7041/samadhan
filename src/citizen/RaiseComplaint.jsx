@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { createComplaint } from "../api/complaintService";
+import { createComplaint, getCategories } from "../api/complaintService";
 import {
   Mic,
   MicOff,
@@ -15,6 +15,9 @@ import {
 
 const RaiseComplaint = () => {
   const navigate = useNavigate();
+  const [title, setTitle] = useState("");
+  const [sector, setSector] = useState("");
+  const [categories, setCategories] = useState([]);
   const [description, setDescription] = useState("");
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -58,6 +61,16 @@ const RaiseComplaint = () => {
 
   useEffect(() => {
     fetchLocation();
+    
+    // Fetch categories dynamically from backend API
+    getCategories()
+      .then((res) => {
+        if (res?.data) {
+          setCategories(res.data);
+        }
+      })
+      .catch((err) => console.error("Failed to fetch complaint categories", err));
+
     return () => {
       // Cleanup image preview URL
       if (imagePreview) URL.revokeObjectURL(imagePreview);
@@ -96,14 +109,26 @@ const RaiseComplaint = () => {
     setError("");
     setSuccess("");
 
-    if (!description.trim()) {
-      setError("Please describe the issue.");
+    if (!title.trim() || title.trim().length < 3) {
+      setError("Please enter a valid complaint title (min 3 characters).");
+      return;
+    }
+
+    if (!sector) {
+      setError("Please select the relevant complaint category/sector.");
+      return;
+    }
+
+    if (!description.trim() || description.trim().length < 10) {
+      setError("Please describe the issue in detail (min 10 characters).");
       return;
     }
 
     setLoading(true);
     try {
       const formData = new FormData();
+      formData.append("title", title);
+      formData.append("sector", sector);
       formData.append("description", description);
       formData.append("location", location);
       if (latitude) formData.append("latitude", latitude);
@@ -166,7 +191,7 @@ const RaiseComplaint = () => {
                   <div className="text-center px-4">
                     <p className="text-lg font-bold text-blue-700">Upload Photo or Video</p>
                     <p className="text-sm text-gray-500 mt-2">
-                      AI will detect issue category automatically
+                      Visual context helps authorities respond faster
                     </p>
                   </div>
                 </>
@@ -178,6 +203,48 @@ const RaiseComplaint = () => {
               className="absolute inset-0 opacity-0 cursor-pointer"
               onChange={handleFileChange}
             />
+          </div>
+        </section>
+
+        {/* ================= TITLE & SECTOR ================= */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-bold text-gray-600 mb-2">Complaint Title</label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Severe Water Pipeline Burst"
+              className="w-full p-4 rounded-2xl bg-white border border-blue-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none shadow-sm font-medium"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-600 mb-2">Category / Sector</label>
+            <select
+              value={sector}
+              onChange={(e) => setSector(e.target.value)}
+              className="w-full p-4 rounded-2xl bg-white border border-blue-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none shadow-sm font-medium text-gray-700"
+            >
+              <option value="">Select Category</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.sector_name}>
+                  {cat.sector_name}
+                </option>
+              ))}
+              {/* Fallback defaults */}
+              {categories.length === 0 && (
+                <>
+                  <option value="Water">Water</option>
+                  <option value="Roads">Roads</option>
+                  <option value="Electricity">Electricity</option>
+                  <option value="Drainage">Drainage</option>
+                  <option value="Sanitation">Sanitation</option>
+                  <option value="Street Lights">Street Lights</option>
+                  <option value="Traffic">Traffic</option>
+                  <option value="Public Safety">Public Safety</option>
+                </>
+              )}
+            </select>
           </div>
         </section>
 
@@ -202,8 +269,8 @@ const RaiseComplaint = () => {
             rows="5"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Explain the issue here..."
-            className="w-full p-5 rounded-3xl bg-white border border-blue-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none resize-none shadow-sm"
+            placeholder="Explain the issue details here..."
+            className="w-full p-5 rounded-3xl bg-white border border-blue-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none resize-none shadow-sm font-medium"
           />
         </section>
 
@@ -217,7 +284,7 @@ const RaiseComplaint = () => {
                 type="text"
                 value={location}
                 readOnly
-                className="flex-1 bg-transparent outline-none text-gray-700"
+                className="flex-1 bg-transparent outline-none text-gray-700 font-medium"
               />
               <button
                 onClick={fetchLocation}

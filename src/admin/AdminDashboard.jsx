@@ -77,7 +77,7 @@ export default function AdminDashboard() {
         const [statsRes, complaintsRes] = await Promise.all([getDashboardStats(), getAllComplaints({ status: 'pending', page: 1, limit: 5 })]);
         if (statsRes.data) setStats(statsRes.data);
         const complaints = complaintsRes.data?.complaints || [];
-        setEscalations(complaints.map(c => ({ id: `#SM-${c.id}`, issue: c.description?.slice(0, 25) + "...", location: c.location || "Unknown", status: new Date(c.created_at).toLocaleDateString() })));
+        setEscalations(complaints.map(c => ({ id: `#SM-${c.id}`, issue: c.title || c.description?.slice(0, 25) + "...", location: c.location || "Unknown", status: new Date(c.created_at).toLocaleDateString() })));
       } catch (err) { console.error(err); }
       finally { setLoading(false); }
     };

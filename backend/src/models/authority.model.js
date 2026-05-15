@@ -18,7 +18,7 @@ const AuthorityModel = {
   findById(id) {
     const db = getDb();
     return db.prepare(
-      'SELECT id, email, job_role, sector, area, pincode, mobile, profile_picture, created_at, updated_at FROM authorities WHERE id = ?'
+      'SELECT id, email, job_role, sector, area, pincode, mobile, profile_picture, village, mandal, district, latitude, longitude, active_status, workload_count, created_at, updated_at FROM authorities WHERE id = ?'
     ).get(id);
   },
 
@@ -33,16 +33,16 @@ const AuthorityModel = {
   /**
    * Create a new authority.
    */
-  create({ email, password_hash, job_role, sector, area, pincode, mobile, profile_picture = null }) {
+  create({ email, password_hash, job_role, sector, area, pincode, mobile, profile_picture = null, village = null, mandal = null, district = null, latitude = null, longitude = null }) {
     const db = getDb();
     const stmt = db.prepare(`
-      INSERT INTO authorities (email, password_hash, job_role, sector, area, pincode, mobile, profile_picture)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO authorities (email, password_hash, job_role, sector, area, pincode, mobile, profile_picture, village, mandal, district, latitude, longitude)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
-    const result = stmt.run(email, password_hash, job_role, sector, area, pincode, mobile, profile_picture);
+    const result = stmt.run(email, password_hash, job_role, sector, area, pincode, mobile, profile_picture, village, mandal, district, latitude, longitude);
     return {
       id: result.lastInsertRowid,
-      email, job_role, sector, area, pincode, mobile, profile_picture,
+      email, job_role, sector, area, pincode, mobile, profile_picture, village, mandal, district, latitude, longitude
     };
   },
 
@@ -51,7 +51,7 @@ const AuthorityModel = {
    */
   update(id, fields) {
     const db = getDb();
-    const allowedFields = ['job_role', 'sector', 'area', 'pincode', 'mobile', 'profile_picture'];
+    const allowedFields = ['job_role', 'sector', 'area', 'pincode', 'mobile', 'profile_picture', 'village', 'mandal', 'district', 'latitude', 'longitude', 'active_status'];
     const updates = [];
     const values = [];
 
@@ -80,7 +80,7 @@ const AuthorityModel = {
     const db = getDb();
     const offset = (page - 1) * limit;
     const authorities = db.prepare(
-      'SELECT id, email, job_role, sector, area, pincode, mobile, profile_picture, created_at FROM authorities ORDER BY created_at DESC LIMIT ? OFFSET ?'
+      'SELECT id, email, job_role, sector, area, pincode, mobile, profile_picture, village, mandal, district, latitude, longitude, active_status, workload_count, created_at FROM authorities ORDER BY created_at DESC LIMIT ? OFFSET ?'
     ).all(limit, offset);
 
     const total = db.prepare('SELECT COUNT(*) as count FROM authorities').get().count;

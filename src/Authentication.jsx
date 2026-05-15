@@ -57,6 +57,11 @@ export default function Authentication() {
     area: "",
     pincode: "",
     mobile: "",
+    village: "",
+    mandal: "",
+    district: "",
+    latitude: "",
+    longitude: "",
   });
   const [authorityProfilePic, setAuthorityProfilePic] = useState(null);
 
@@ -89,6 +94,30 @@ export default function Authentication() {
   const handleOtpKeyDown = (index, e) => {
     if (e.key === "Backspace" && !otpDigits[index] && index > 0) {
       otpRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleGetLocation = () => {
+    clearMessages();
+    if ("geolocation" in navigator) {
+      setLoading(true);
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setAuthorityForm((prev) => ({
+            ...prev,
+            latitude: position.coords.latitude.toString(),
+            longitude: position.coords.longitude.toString(),
+          }));
+          setSuccess("Location captured successfully!");
+          setLoading(false);
+        },
+        (error) => {
+          setError("Failed to get location. Please allow location access.");
+          setLoading(false);
+        }
+      );
+    } else {
+      setError("Geolocation is not supported by your browser.");
     }
   };
 
@@ -454,6 +483,46 @@ export default function Authentication() {
               value={authorityForm.pincode}
               onChange={(e) => setAuthorityForm({ ...authorityForm, pincode: e.target.value })}
             />
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            <input
+              type="text"
+              placeholder="Village"
+              className="px-4 py-3 rounded-xl border border-blue-100 focus:ring-2 focus:ring-blue-500 outline-none"
+              value={authorityForm.village}
+              onChange={(e) => setAuthorityForm({ ...authorityForm, village: e.target.value })}
+            />
+            <input
+              type="text"
+              placeholder="Mandal"
+              className="px-4 py-3 rounded-xl border border-blue-100 focus:ring-2 focus:ring-blue-500 outline-none"
+              value={authorityForm.mandal}
+              onChange={(e) => setAuthorityForm({ ...authorityForm, mandal: e.target.value })}
+            />
+            <input
+              type="text"
+              placeholder="District"
+              className="px-4 py-3 rounded-xl border border-blue-100 focus:ring-2 focus:ring-blue-500 outline-none"
+              value={authorityForm.district}
+              onChange={(e) => setAuthorityForm({ ...authorityForm, district: e.target.value })}
+            />
+          </div>
+
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={handleGetLocation}
+              disabled={loading}
+              className="flex-shrink-0 px-4 py-3 rounded-xl bg-blue-100 text-blue-700 font-semibold hover:bg-blue-200 transition"
+            >
+              Capture Location
+            </button>
+            <div className="flex-1 px-4 py-3 rounded-xl border border-blue-100 bg-gray-50 text-gray-500 text-sm overflow-hidden text-ellipsis whitespace-nowrap">
+              {authorityForm.latitude && authorityForm.longitude 
+                ? `${authorityForm.latitude}, ${authorityForm.longitude}` 
+                : "No location captured"}
+            </div>
           </div>
 
           <div className="relative">

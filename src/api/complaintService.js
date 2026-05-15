@@ -5,8 +5,28 @@ import api from './axiosInstance';
 // ═══════════════════════════════════════════════════════════════
 
 /**
+ * Get all available complaint sectors/categories.
+ */
+export const getCategories = async () => {
+  const response = await api.get('/complaints/categories');
+  return response.data;
+};
+
+/**
+ * Get complaints automatically routed to the logged-in authority's sector.
+ * @param {number} page
+ * @param {number} limit
+ */
+export const getSectorComplaints = async (page = 1, limit = 20) => {
+  const response = await api.get('/complaints/sector', {
+    params: { page, limit },
+  });
+  return response.data;
+};
+
+/**
  * Create a new complaint (citizen only).
- * @param {FormData} formData - Must include: description, location. Optional: image (file), latitude, longitude, priority
+ * @param {FormData} formData - Must include: title, sector, description, location. Optional: image (file), latitude, longitude, priority
  */
 export const createComplaint = async (formData) => {
   const response = await api.post('/complaints', formData, {

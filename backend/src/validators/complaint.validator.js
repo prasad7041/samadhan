@@ -8,6 +8,14 @@
 export function validateCreateComplaint(body) {
   const errors = [];
 
+  if (!body.title || body.title.trim().length < 3) {
+    errors.push('Title must be at least 3 characters.');
+  }
+
+  if (!body.sector || body.sector.trim().length < 2) {
+    errors.push('Complaint sector/category is required.');
+  }
+
   if (!body.description || body.description.trim().length < 10) {
     errors.push('Description must be at least 10 characters.');
   }

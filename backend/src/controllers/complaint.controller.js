@@ -1,9 +1,24 @@
 import ComplaintModel from '../models/complaint.model.js';
+import AuthorityModel from '../models/authority.model.js';
 import { success, error } from '../utils/responseHelper.js';
+import geocodingService from '../services/geocoding.service.js';
 
 /**
  * Complaint Controller.
  */
+
+/**
+ * GET /api/complaints/categories
+ * Get all available complaint sectors/categories.
+ */
+export async function getCategories(req, res, next) {
+  try {
+    const categories = ComplaintModel.getCategories();
+    return success(res, categories, 'Categories fetched successfully.');
+  } catch (err) {
+    next(err);
+  }
+}
 
 /**
  * POST /api/complaints
@@ -11,23 +26,92 @@ import { success, error } from '../utils/responseHelper.js';
  */
 export async function createComplaint(req, res, next) {
   try {
-    const { description, location, latitude, longitude, priority } = req.body;
+    const { title, sector, description, location, latitude, longitude, priority } = req.body;
+
+    console.log(`[DEBUG-ROUTING] Incoming complaint submission. Title: '${title}', Sector: '${sector}'`);
+
+    let area = null;
+    let pincode = null;
+    let city = null;
+    let village = null;
+    let mandal = null;
+    let district = null;
+
+    if (latitude && longitude) {
+      console.log(`[DEBUG-ROUTING] Reverse geocoding coordinates: ${latitude}, ${longitude}`);
+      const geoResult = await geocodingService.reverseGeocode(latitude, longitude);
+      if (geoResult) {
+        area = geoResult.area;
+        pincode = geoResult.pincode;
+        city = geoResult.city;
+        village = geoResult.village;
+        mandal = geoResult.mandal;
+        district = geoResult.district;
+        console.log(`[DEBUG-ROUTING] Reverse geocoding successful. Area: ${area}, Pincode: ${pincode}, City: ${city}, Village: ${village}, Mandal: ${mandal}, District: ${district}`);
+      } else {
+        console.warn(`[DEBUG-ROUTING] Reverse geocoding failed or returned null for ${latitude}, ${longitude}`);
+      }
+    }
 
     // Get image path if uploaded
     const image_path = req.file ? `/uploads/complaints/${req.file.filename}` : null;
 
     const complaint = ComplaintModel.create({
+      title,
+      sector,
       citizen_id: req.user.id,
       description,
       image_path,
       location,
       latitude,
       longitude,
+      area,
+      pincode,
+      city,
+      village,
+      mandal,
+      district,
       priority,
     });
 
+    console.log(`[DEBUG-ROUTING] Complaint successfully stored in DB. ID: ${complaint.id}, Sector: '${complaint.sector}'`);
+
     return success(res, { complaint }, 'Complaint submitted successfully.', 201);
   } catch (err) {
+    console.error("[DEBUG-ROUTING] Error creating complaint:", err);
+    next(err);
+  }
+}
+
+/**
+ * GET /api/complaints/sector
+ * Get complaints automatically routed to the logged-in authority's sector.
+ */
+export async function getSectorComplaints(req, res, next) {
+  try {
+    const { status, priority, page, limit } = req.query;
+
+    // Fetch authority details to get their assigned sector
+    const authority = AuthorityModel.findById(req.user.id);
+    if (!authority) {
+      console.warn(`[DEBUG-ROUTING] Authority profile not found for user ID: ${req.user.id}`);
+      return error(res, 'Authority profile not found.', 404);
+    }
+
+    console.log(`[DEBUG-ROUTING] Fetching complaints for Authority ID: ${authority.id}, Assigned Sector: '${authority.sector}', Area: '${authority.area}', Pincode: '${authority.pincode}'`);
+
+    const result = ComplaintModel.findBySector(authority.sector, authority.area, authority.pincode, {
+      status,
+      priority,
+      page: parseInt(page) || 1,
+      limit: parseInt(limit) || 20,
+    });
+
+    console.log(`[DEBUG-ROUTING] Found ${result.complaints.length} complaints matching sector '${authority.sector}'`);
+
+    return success(res, result, `Complaints for sector '${authority.sector}' fetched successfully.`);
+  } catch (err) {
+    console.error("[DEBUG-ROUTING] Error in getSectorComplaints:", err);
     next(err);
   }
 }
@@ -74,7 +158,7 @@ export async function getMyReports(req, res, next) {
 
 /**
  * GET /api/complaints/assigned
- * Get complaints assigned to the logged-in authority.
+ * Get complaints explicitly assigned to the logged-in authority.
  */
 export async function getAssignedComplaints(req, res, next) {
   try {
@@ -119,7 +203,7 @@ export async function getNearbyComplaints(req, res, next) {
 
 /**
  * GET /api/complaints/:id
- * Get a single complaint by ID.
+ * Get a single complaint by ID with sector-based authorization.
  */
 export async function getComplaintById(req, res, next) {
   try {
@@ -127,6 +211,18 @@ export async function getComplaintById(req, res, next) {
 
     if (!complaint) {
       return error(res, 'Complaint not found.', 404);
+    }
+
+    // Role-based Sector Authorization Logic: If the requester is an authority, verify sector alignment
+    if (req.user && req.user.role === 'authority') {
+      const authority = AuthorityModel.findById(req.user.id);
+      if (!authority || authority.sector !== complaint.sector) {
+        return error(
+          res,
+          `Access Denied: Unrelated Department. Complaint belongs to '${complaint.sector}' sector. You are authorized only for '${authority ? authority.sector : 'Unknown'}' sector.`,
+          403
+        );
+      }
     }
 
     // Also get status history
@@ -140,7 +236,7 @@ export async function getComplaintById(req, res, next) {
 
 /**
  * PUT /api/complaints/:id/status
- * Update complaint status (authority/admin).
+ * Update complaint status with resolution/remarks (authority/admin).
  */
 export async function updateStatus(req, res, next) {
   try {
@@ -153,6 +249,14 @@ export async function updateStatus(req, res, next) {
       return error(res, 'Complaint not found.', 404);
     }
 
+    // Enforce sector checking if authority updates status
+    if (req.user && req.user.role === 'authority') {
+      const authority = AuthorityModel.findById(req.user.id);
+      if (!authority || authority.sector !== existing.sector) {
+        return error(res, `Cannot update status: Complaint belongs to '${existing.sector}' sector.`, 403);
+      }
+    }
+
     const updated = ComplaintModel.updateStatus(complaintId, {
       status,
       changed_by_role: req.user.role,
@@ -160,7 +264,7 @@ export async function updateStatus(req, res, next) {
       remarks,
     });
 
-    return success(res, { complaint: updated }, 'Complaint status updated successfully.');
+    return success(res, { complaint: updated }, 'Complaint status/resolution updated successfully.');
   } catch (err) {
     next(err);
   }

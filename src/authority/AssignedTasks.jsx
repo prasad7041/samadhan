@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getAssignedComplaints, updateComplaintStatus } from "../api/complaintService";
+import { getSectorComplaints, updateComplaintStatus } from "../api/complaintService";
 
 import {
   Menu,
@@ -83,11 +83,12 @@ export default function AuthorityTasks() {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const res = await getAssignedComplaints(1, 20);
-        const complaints = res.data?.complaints || [];
+        const res = await getSectorComplaints(1, 50);
+        const list = res?.data?.complaints || res?.complaints || res?.data || [];
+        const complaints = Array.isArray(list) ? list : (Array.isArray(res?.data?.data?.complaints) ? res.data.data.complaints : []);
         setTasks(complaints.map(c => ({
           id: c.id,
-          title: c.description?.slice(0, 40) + "...",
+          title: c.title || c.description?.slice(0, 40) + "...",
           department: c.sector || "General",
           location: c.location || "Unknown",
           reported: new Date(c.created_at).toLocaleDateString(),

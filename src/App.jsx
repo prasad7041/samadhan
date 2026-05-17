@@ -24,6 +24,7 @@ import AuthorityDashboard from './authority/AuthorityDashboard';
 import AssignedTasks from './authority/AssignedTasks';
 import AuthorityProfile from './authority/AuthorityProfile';
 import AuthorityPerformance from './authority/Performance';
+import ViewTask from './authority/ViewTask';
 
 // Admin Portal
 import AdminDashboard from './admin/AdminDashboard';
@@ -93,6 +94,11 @@ function App() {
               <Route path="/authority/tasks" element={
                 <ProtectedRoute allowedRoles={['authority']}>
                   <AssignedTasks />
+                </ProtectedRoute>
+              } />
+              <Route path="/authority/tasks/:id" element={
+                <ProtectedRoute allowedRoles={['authority']}>
+                  <ViewTask />
                 </ProtectedRoute>
               } />
               <Route path="/authority/performance" element={

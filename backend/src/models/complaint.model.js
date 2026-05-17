@@ -171,8 +171,17 @@ const ComplaintModel = {
     const db = getDb();
     const offset = (page - 1) * limit;
     const cleanSector = sector ? sector.trim() : '';
-    let where = ['LOWER(TRIM(c.sector)) = LOWER(TRIM(?)) AND (c.pincode = ? OR c.area = ?)'];
-    let params = [cleanSector, pincode, area];
+                let where = [
+`
+  LOWER(TRIM(c.sector)) = LOWER(TRIM(?))
+  AND (
+    LOWER(TRIM(c.area)) = LOWER(TRIM(?))
+    OR TRIM(CAST(c.pincode AS TEXT)) = TRIM(CAST(? AS TEXT))
+  )
+  `
+];
+
+let params = [cleanSector, area, pincode];
 
     if (status) {
       where.push('c.status = ?');

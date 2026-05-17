@@ -11,6 +11,7 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
+  XCircle,
 } from "lucide-react";
 
 const RaiseComplaint = () => {
@@ -29,13 +30,21 @@ const RaiseComplaint = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // ================= FILE =================
+  // ================= FILE HANDLER =================
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
     }
+  };
+
+  const clearPhoto = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setImageFile(null);
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImagePreview(null);
   };
 
   // ================= LOCATION =================
@@ -62,7 +71,6 @@ const RaiseComplaint = () => {
   useEffect(() => {
     fetchLocation();
     
-    // Fetch categories dynamically from backend API
     getCategories()
       .then((res) => {
         if (res?.data) {
@@ -72,7 +80,6 @@ const RaiseComplaint = () => {
       .catch((err) => console.error("Failed to fetch complaint categories", err));
 
     return () => {
-      // Cleanup image preview URL
       if (imagePreview) URL.revokeObjectURL(imagePreview);
     };
   }, []);
@@ -119,6 +126,11 @@ const RaiseComplaint = () => {
       return;
     }
 
+    if (!imageFile) {
+      setError("Please capture live evidence to proceed.");
+      return;
+    }
+
     if (!description.trim() || description.trim().length < 10) {
       setError("Please describe the issue in detail (min 10 characters).");
       return;
@@ -162,7 +174,7 @@ const RaiseComplaint = () => {
         </div>
       </header>
 
-      {/* ================= MAIN ================= */}
+      {/* ================= MAIN CONTAINER ================= */}
       <main className="pt-24 px-4 max-w-5xl mx-auto space-y-8">
         {/* Messages */}
         {error && (
@@ -176,33 +188,53 @@ const RaiseComplaint = () => {
           </div>
         )}
 
-        {/* ================= MEDIA ================= */}
+        {/* ================= LIVE EVIDENCE MEDIA SECTION ================= */}
         <section>
-          <label className="block text-sm font-bold text-gray-600 mb-3">Upload Evidence</label>
+          <div className="flex justify-between items-center mb-3">
+            <label className="text-sm font-bold text-gray-600">Capture Live Evidence</label>
+            <span className="text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg">
+              Live Camera Mode
+            </span>
+          </div>
+          
           <div className="relative group">
-            <div className="aspect-video rounded-3xl border-2 border-dashed border-blue-200 bg-blue-50 flex flex-col items-center justify-center gap-4 transition-all group-hover:border-blue-500 overflow-hidden">
+            <div className="aspect-video rounded-3xl border-2 border-dashed border-blue-300 bg-blue-50/50 flex flex-col items-center justify-center gap-4 transition-all group-hover:border-blue-500 overflow-hidden relative shadow-inner">
               {imagePreview ? (
-                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                <div className="w-full h-full relative">
+                  <img src={imagePreview} alt="Live Evidence Preview" className="w-full h-full object-cover" />
+                  <button
+                    onClick={clearPhoto}
+                    className="absolute top-4 right-4 bg-black/60 backdrop-blur-md hover:bg-black/80 text-white p-2 rounded-full transition flex items-center gap-1.5 text-xs font-bold shadow-lg z-20"
+                  >
+                    <XCircle size={16} /> Recapture
+                  </button>
+                </div>
               ) : (
                 <>
-                  <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center">
-                    <Camera size={36} className="text-blue-700" />
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center text-white shadow-lg">
+                    <Camera size={36} />
                   </div>
-                  <div className="text-center px-4">
-                    <p className="text-lg font-bold text-blue-700">Upload Photo or Video</p>
-                    <p className="text-sm text-gray-500 mt-2">
-                      Visual context helps authorities respond faster
+                  <div className="text-center px-4 pointer-events-none">
+                    <p className="text-lg font-black text-blue-800">Tap to Open Device Camera</p>
+                    <p className="text-sm text-gray-500 mt-1 max-w-sm">
+                      Please use your device camera to document the complaint context instantly.
                     </p>
                   </div>
                 </>
               )}
             </div>
-            <input
-              type="file"
-              accept="image/*"
-              className="absolute inset-0 opacity-0 cursor-pointer"
-              onChange={handleFileChange}
-            />
+
+            {/* Updated Live Input Tag Implementation */}
+            {!imagePreview && (
+              <input
+                type="file"
+                accept="image/*"
+                capture="user"
+                multiple={false}
+                className="absolute inset-0 opacity-0 cursor-pointer z-10 w-full h-full"
+                onChange={handleFileChange}
+              />
+            )}
           </div>
         </section>
 
@@ -231,7 +263,6 @@ const RaiseComplaint = () => {
                   {cat.sector_name}
                 </option>
               ))}
-              {/* Fallback defaults */}
               {categories.length === 0 && (
                 <>
                   <option value="Water">Water</option>
@@ -297,8 +328,8 @@ const RaiseComplaint = () => {
         </section>
       </main>
 
-      {/* ================= FOOTER ================= */}
-      <footer className="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-blue-100 p-4 shadow-lg">
+      {/* ================= FOOTER ACTIONS ================= */}
+      <footer className="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-blue-100 p-4 shadow-lg z-40">
         <div className="max-w-5xl mx-auto">
           <button
             onClick={handleSubmit}

@@ -1,5 +1,5 @@
 import React from "react";
-
+import { useNavigate } from "react-router-dom";
 import {
   Camera,
   Bot,
@@ -81,6 +81,8 @@ const FeatureCard = ({
 /* ================= MAIN ================= */
 
 const LandingPage = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 text-gray-900 overflow-hidden relative">
       {/* BACKGROUND EFFECTS */}
@@ -118,7 +120,7 @@ const LandingPage = () => {
               Updates
             </button>
 
-            <button className="h-12 px-8 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold shadow-xl hover:scale-105 active:scale-95 transition-all">
+            <button className="h-12 px-8 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold shadow-xl hover:scale-105 active:scale-95 transition-all" onClick={()=>navigate("/login")} >
               Login / Sign Up
             </button>
           </div>
@@ -175,7 +177,7 @@ const LandingPage = () => {
 
               {/* BUTTONS */}
               <div className="flex flex-wrap gap-5 mt-10">
-                <button className="h-14 px-10 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3">
+                <button className="h-14 px-10 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3" onClick={() => navigate("/login")}>
                   Get Started
 
                   <ArrowRight size={20} />
